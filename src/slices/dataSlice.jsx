@@ -51,7 +51,7 @@ function normalizeRow(row, columns, idKey) {
   return normalized;
 }
 
-/** Fetch data – api/data (paginated + search). loadData({ queryName, page?, limit?, search? }) */
+/** Fetch data – api/data (paginated + search). loadData({ queryName, page?, limit?, search?, academicYearId? }) */
 export const loadData = createAsyncThunk(
   'data/load',
   async (arg, { rejectWithValue }) => {
@@ -59,8 +59,9 @@ export const loadData = createAsyncThunk(
     const page = typeof arg === 'object' && arg?.page != null ? arg.page : 1;
     const limit = typeof arg === 'object' && arg?.limit != null ? arg.limit : 10;
     const search = typeof arg === 'object' ? arg?.search : undefined;
+    const academicYearId = typeof arg === 'object' ? arg?.academicYearId : undefined;
     try {
-      const data = await fetchDataPaginated({ queryName, page, limit, search });
+      const data = await fetchDataPaginated({ queryName, page, limit, search, academicYearId });
       return { queryName, data };
     } catch (err) {
       return rejectWithValue({ queryName, error: err.message });

@@ -2,19 +2,19 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import Card from '../components/ui/Card';
-import Tabs from '../components/ui/Tabs';
-import CrudModal from '../modals/CrudModal';
-import { EntityTab } from './tabs';
-import { CRUD_CONFIG } from '../config/crudConfig';
-import { getTabsForPath } from '../config/menuConfig';
-import { getModalEntities, getQueryForModalKey } from '../utils/tabModalUtils';
-import { loadData } from '../slices/dataSlice';
-import { setActiveTab } from '../slices/uiSlice';
+import Card from '../../../components/ui/Card';
+import Tabs from '../../../components/ui/Tabs';
+import CrudModal from '../../../modals/CrudModal';
+import { EntityTab } from '../../index';
+import { CRUD_CONFIG } from '../../../config/crudConfig';
+import { getTabsForPath } from '../../../config/menuConfig';
+import { getModalEntities, getQueryForModalKey } from '../../../utils/tabModalUtils';
+import { loadData } from '../../../slices/dataSlice';
+import { setActiveTab } from '../../../slices/uiSlice';
 
 const motionProps = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.2 } };
 
-export default function student_register() {
+export default function AccountsPage() {
   const location = useLocation();
   const dispatch = useDispatch();
   const [modal, setModal] = useState({ entityKey: null, editRow: null });
@@ -45,11 +45,13 @@ export default function student_register() {
         <motion.div key={activeTab} {...motionProps}>
           <EntityTab
             entityKey={cfg.entityKey}
-            modalKey={cfg.modalKey ?? (cfg.loadButtons || []).find((b) => b.modalKey)?.modalKey}
+            modalKey={cfg.modalKey}
             icon={cfg.icon}
             loadButtons={cfg.loadButtons}
             dispatch={dispatch}
             onEdit={openModal}
+            showAcademicYearSelect={cfg.showAcademicYearSelect}
+            academicYearOptionsQuery={cfg.academicYearOptionsQuery}
           />
         </motion.div>
       );

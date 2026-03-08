@@ -1,25 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import Card from '../components/ui/Card';
-import Tabs from '../components/ui/Tabs';
-import CrudModal from '../modals/CrudModal';
-import { EntityTab } from './tabs';
-import { CRUD_CONFIG } from '../config/crudConfig';
-import { getTabsForPath } from '../config/menuConfig';
-import { getModalEntities, getQueryForModalKey } from '../utils/tabModalUtils';
-import { loadData } from '../slices/dataSlice';
-import { setActiveTab } from '../slices/uiSlice';
+import { Database, Plus } from 'lucide-react';
+import Card from '../../../components/ui/Card';
+import Tabs from '../../../components/ui/Tabs';
+import CrudModal from '../../../modals/CrudModal';
+import { EntityTab } from '../../index';
+import { CRUD_CONFIG } from '../../../config/crudConfig';
+import { getTabsForPath } from '../../../config/menuConfig';
+import { getModalEntities, getQueryForModalKey } from '../../../utils/tabModalUtils';
+import { loadData } from '../../../slices/dataSlice';
+import { setActiveTab } from '../../../slices/uiSlice';
 
 const motionProps = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.2 } };
+const iconMap = { Database, Plus };
 
-export default function AccountsPage() {
+function mapTab(tab) {
+  return {
+    ...tab,
+    icon: iconMap[tab.icon] ?? Database,
+    loadButtons: (tab.loadButtons || []).map((btn) => ({
+      ...btn,
+      icon: iconMap[btn.icon] ?? Plus,
+    })),
+  };
+}
+
+export default function StudentofficeTabs() {
   const location = useLocation();
   const dispatch = useDispatch();
   const [modal, setModal] = useState({ entityKey: null, editRow: null });
 
-  const tabs = getTabsForPath(location.pathname);
+  const rawTabs = getTabsForPath(location.pathname);
+  const tabs = useMemo(() => rawTabs.map(mapTab), [rawTabs]);
   const { activeTab } = useSelector((state) => state.ui);
   const activeTabConfig = tabs.find((t) => t.id === activeTab);
   const modalEntities = getModalEntities(tabs);
@@ -50,6 +64,8 @@ export default function AccountsPage() {
             loadButtons={cfg.loadButtons}
             dispatch={dispatch}
             onEdit={openModal}
+            showAcademicYearSelect={cfg.showAcademicYearSelect}
+            academicYearOptionsQuery={cfg.academicYearOptionsQuery}
           />
         </motion.div>
       );
@@ -67,8 +83,10 @@ export default function AccountsPage() {
         <Card className="p-0 overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm shadow-slate-200/60">
           <div className="h-[3px] bg-gradient-to-r from-[#0B3C5D] to-[#0D9488]" />
           <div className="flex items-center justify-between flex-wrap gap-4 px-5 py-4 min-h-[58px] bg-gradient-to-r from-[#F8FAFC] to-[#EEF2F7] border-b border-slate-200/80">
+           
             <Tabs
               tabs={tabs}
+              
               activeTab={activeTab}
               onTabChange={(id) => dispatch(setActiveTab(id))}
               className="flex-1 min-w-0"

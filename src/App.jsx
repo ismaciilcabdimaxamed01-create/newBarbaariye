@@ -3,14 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { Provider, useSelector } from 'react-redux';
 import { store } from './store/store';
 import Layout from './components/layout/Layout';
-import Dashboard from './pages/Dashboard';
-import LoginPage from './pages/LoginPage';
-import AccountsPage from './pages/AccountsPage';
-import StudentsSidebarPage from './pages/StudentsSidebarPage';
-import StudentRegister from './pages/student_register';
-import PeopleSection from './pages/People_section';
-import StudentAttendence from './pages/attendence_student';
-
+import Dashboard from './utility/Dashboard';
+import LoginPage from './utility/LoginPage';
+import UserPrivilegePage from './utility/UserPrivilegePage';
+import AcademicSetup from './utility/pages/academicfolder/AcademicSetup';
+import StudentofficeTabs from './utility/pages/studentFolder/studentofficeTabs';
 function DarkModeInit() {
   const darkMode = useSelector((state) => state.ui.darkMode);
   useEffect(() => {
@@ -73,13 +70,20 @@ function AppContent() {
               <Layout>
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
-                  <Route path="/classes" element={<AccountsPage />} />
-                  <Route path="/accounts" element={<AccountsPage />} />
-                  <Route path="/studentssidebar" element={<StudentsSidebarPage />} />
-                  <Route path="/student_register" element={<StudentRegister />} />
-                  <Route path="/people_section" element={<PeopleSection />} />
-                  <Route path="/student_attendence" element={<StudentAttendence />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
+                  <Route path="/AcademicSetup" element={<AcademicSetup />} />
+                    <Route path="/AcademicTransfer" element={<AcademicSetup />} />
+                  <Route path="/AcademicSaylapus" element={<AcademicSetup />} />
+                  <Route path="/LessonPlan" element={<AcademicSetup />} />
+                  <Route path="/StudentSetup" element={<AcademicSetup />} />
+                  <Route path="/frontend/classes" element={<AcademicSetup />} />
+                  <Route path="/frontend/student_register" element={<AcademicSetup />} />
+                  <Route path="/frontend/people_section" element={<AcademicSetup />} />
+                  <Route path="/frontend/student_attendence" element={<AcademicSetup />} />
+                  <Route path="/frontend/student_marks" element={<AcademicSetup />} />
+                  <Route path="/StudentsOffice" element={<StudentofficeTabs />} />
+                  
+                  <Route path="/user-privilege" element={<UserPrivilegePage />} />
+                  <Route path="*" element={<Navigate to="/" replace />}/>
                 </Routes>
               </Layout>
             </ProtectedRoute>

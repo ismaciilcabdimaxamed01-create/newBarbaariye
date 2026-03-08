@@ -1,33 +1,34 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import Card from '../components/ui/Card';
-import Tabs from '../components/ui/Tabs';
-import CrudModal from '../modals/CrudModal';
-import { EntityTab } from './tabs';
-import { CRUD_CONFIG } from '../config/crudConfig';
-import { getTabsForPath } from '../config/menuConfig';
-import { getModalEntities, getQueryForModalKey } from '../utils/tabModalUtils';
-import { loadData } from '../slices/dataSlice';
+import Card from '../../../components/ui/Card';
+import Tabs from '../../../components/ui/Tabs';
+import CrudModal from '../../../modals/CrudModal';
+import { EntityTab } from '../../index';
+import { CRUD_CONFIG } from '../../../config/crudConfig';
+import { getTabsForPath } from '../../../config/menuConfig';
+import { getModalEntities, getQueryForModalKey } from '../../../utils/tabModalUtils';
+import { loadData } from '../../../slices/dataSlice';
+import { setActiveTab } from '../../../slices/uiSlice';
 
 const motionProps = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.2 } };
 
-export default function StudentsSidebarPage() {
+export default function AccountsPage() {
   const location = useLocation();
   const dispatch = useDispatch();
   const [modal, setModal] = useState({ entityKey: null, editRow: null });
 
   const tabs = getTabsForPath(location.pathname);
-  const [activeTab, setActiveTab] = useState(tabs[0]?.id ?? 'student_class');
+  const { activeTab } = useSelector((state) => state.ui);
   const activeTabConfig = tabs.find((t) => t.id === activeTab);
   const modalEntities = getModalEntities(tabs);
 
   useEffect(() => {
     if (tabs.length && !tabs.some((t) => t.id === activeTab)) {
-      setActiveTab(tabs[0].id);
+      dispatch(setActiveTab(tabs[0].id));
     }
-  }, [location.pathname, tabs, activeTab]);
+  }, [location.pathname, tabs, activeTab, dispatch]);
 
   const openModal = (entityKey) => (row = null) => {
     const config = CRUD_CONFIG[entityKey];
@@ -49,6 +50,8 @@ export default function StudentsSidebarPage() {
             loadButtons={cfg.loadButtons}
             dispatch={dispatch}
             onEdit={openModal}
+            showAcademicYearSelect={cfg.showAcademicYearSelect}
+            academicYearOptionsQuery={cfg.academicYearOptionsQuery}
           />
         </motion.div>
       );
@@ -69,7 +72,7 @@ export default function StudentsSidebarPage() {
             <Tabs
               tabs={tabs}
               activeTab={activeTab}
-              onTabChange={setActiveTab}
+              onTabChange={(id) => dispatch(setActiveTab(id))}
               className="flex-1 min-w-0"
             />
           </div>

@@ -23,7 +23,7 @@ export async function fetchSelectOptions(queryName, limit = 25, search = '') {
   });
 }
 
-export async function fetchDataPaginated({ queryName, page = 1, limit = 10, search = '' }) {
+export async function fetchDataPaginated({ queryName, page = 1, limit = 10, search = '', academicYearId = '' }) {
   const res = await fetch(`${API_BASE}/data`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -32,6 +32,7 @@ export async function fetchDataPaginated({ queryName, page = 1, limit = 10, sear
       page,
       limit,
       ...(search != null && String(search).trim() && { search: String(search).trim() }),
+      ...(academicYearId != null && String(academicYearId).trim() && { academicYearId: String(academicYearId).trim() }),
     }),
   });
   if (!res.ok) {

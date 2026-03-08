@@ -1,11 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { swalSuccess, swalConfirm, swalError } from '../../utils/swal';
+import { swalSuccess, swalConfirm, swalError } from '../utils/swal';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
-import Button from '../../components/ui/Button';
-import ActionButton from '../../components/ui/ActionButton';
-import DataTableCard from '../../components/DataTableCard';
-import { CRUD_CONFIG } from '../../config/crudConfig';
+import Button from '../components/ui/Button';
+import ActionButton from '../components/ui/ActionButton';
+import DataTableCard from '../components/DataTableCard';
+import { CRUD_CONFIG } from '../config/crudConfig';
+import { fetchSelectOptions } from '../services/api';
 import {
   loadData,
   setSearchQuery,
@@ -16,19 +17,34 @@ import {
   selectPaginatedData,
   selectTotalPages,
   selectTotalRows,
-} from '../../slices/dataSlice';
-import { deleteRow } from '../../utils/crud';
+} from '../slices/dataSlice';
+import { deleteRow } from '../utils/crud';
 
 const toLabel = (key) => key.charAt(0).toUpperCase() + key.slice(1, -1);
 
+// Halkaan ka qeexo query-ka academic year – automatic loo isticmaalo haddii tab kuu pass gudbin
+const DEFAULT_ACADEMIC_YEAR_OPTIONS_QUERY = 'academicYeartab';
+
 // Search ma la dirin database – kaliya table-ka (client-side) ayaa la filter-garaynayaa
-const loadPayload = (entityKey, page, limit) => ({
+const loadPayload = (entityKey, page, limit, academicYearId) => ({
   queryName: entityKey,
   page,
   limit: limit || 10,
+  ...(academicYearId != null && String(academicYearId).trim() && { academicYearId: String(academicYearId).trim() }),
 });
 
-export default function EntityTab({ entityKey, modalKey, icon: Icon, loadButtons, dispatch, onEdit }) {
+const CHEVRON_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%231F2937'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E";
+
+export default function EntityTab({
+  entityKey,
+  modalKey,
+  icon: Icon,
+  loadButtons,
+  dispatch,
+  onEdit,
+  showAcademicYearSelect = false,
+  academicYearOptionsQuery,
+}) {
   const entity = useSelector(selectEntity(entityKey)) ?? {};
   const columns = useSelector(selectColumns(entityKey));
   const paginatedData = useSelector(selectPaginatedData(entityKey));
@@ -40,11 +56,35 @@ export default function EntityTab({ entityKey, modalKey, icon: Icon, loadButtons
   const loadBtns = loadButtons ?? [{ id: entityKey, label: `Load ${label}` }];
   const limit = entity.itemsPerPage || 10;
   const [showDataPanel, setShowDataPanel] = useState(false);
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState('');
+  const [academicYearOptions, setAcademicYearOptions] = useState([]);
+
+  // Automatic: haddii academicYearOptionsQuery la gudbin waayo, default waa academicYeartab
+  const optionsQuery = academicYearOptionsQuery ?? DEFAULT_ACADEMIC_YEAR_OPTIONS_QUERY;
+
+  useEffect(() => {
+    if (!showAcademicYearSelect) return;
+    let cancelled = false;
+    fetchSelectOptions(optionsQuery, 100, '')
+      .then((res) => {
+        if (cancelled) return;
+        const rows = res?.data ?? res?.rows ?? [];
+        const valueKey = rows[0] && ('id' in rows[0] ? 'id' : Object.keys(rows[0])[0]);
+        const labelKey = rows[0] && ('name' in rows[0] ? 'name' : Object.keys(rows[0])[1] || valueKey);
+        const opts = rows.map((r) => ({ value: String(r[valueKey] ?? ''), label: String(r[labelKey] ?? r[valueKey] ?? '') }));
+        setAcademicYearOptions(opts);
+        if (opts.length > 0 && !selectedAcademicYearId) setSelectedAcademicYearId(opts[0].value);
+      })
+      .catch(() => setAcademicYearOptions([]));
+    return () => { cancelled = true; };
+  }, [showAcademicYearSelect, optionsQuery]);
+
+  const academicYearIdForLoad = showAcademicYearSelect ? selectedAcademicYearId : undefined;
 
   const onShowData = useCallback(
-    (btnId) => {
+    (btnId, academicYearId) => {
       setShowDataPanel(true);
-      dispatch(loadData(loadPayload(btnId, 1, limit)));
+      dispatch(loadData(loadPayload(btnId, 1, limit, academicYearId)));
     },
     [limit, dispatch]
   );
@@ -53,31 +93,31 @@ export default function EntityTab({ entityKey, modalKey, icon: Icon, loadButtons
     async (row) => {
       try {
         await deleteRow(row, config, () => {
-          dispatch(loadData(loadPayload(entityKey, 1, limit)));
+          dispatch(loadData(loadPayload(entityKey, 1, limit, academicYearIdForLoad)));
           swalSuccess('Wa la guulaystey', 'Xogtada waa la tirtay.');
         });
       } catch (err) {
         swalError('Khalad ayaa dhacay', err.message || 'Tirtirku wuu ku fashilmay.');
       }
     },
-    [config, entityKey, limit, dispatch]
+    [config, entityKey, limit, dispatch, academicYearIdForLoad]
   );
 
   const goToPage = useCallback(
     (page) => {
       dispatch(setCurrentPage({ entityKey, value: page }));
-      dispatch(loadData(loadPayload(entityKey, page, limit)));
+      dispatch(loadData(loadPayload(entityKey, page, limit, academicYearIdForLoad)));
     },
-    [entityKey, limit, dispatch]
+    [entityKey, limit, dispatch, academicYearIdForLoad]
   );
 
   const handlePageSizeChange = useCallback(
     (newSize) => {
       dispatch(setItemsPerPage({ entityKey, value: newSize }));
-      dispatch(loadData(loadPayload(entityKey, 1, newSize)));
+      dispatch(loadData(loadPayload(entityKey, 1, newSize, academicYearIdForLoad)));
       dispatch(setCurrentPage({ entityKey, value: 1 }));
     },
-    [entityKey, dispatch]
+    [entityKey, dispatch, academicYearIdForLoad]
   );
 
   const renderActions = useCallback(
@@ -102,6 +142,26 @@ export default function EntityTab({ entityKey, modalKey, icon: Icon, loadButtons
 
   const headerActions = (
     <>
+      {showAcademicYearSelect && (
+        <select
+          className="min-w-[180px] cursor-pointer appearance-none rounded border border-[#D1D5DB] bg-white py-2 pl-4 pr-9 text-sm font-normal text-[#374151] focus:border-gray-400 focus:outline-none"
+          style={{
+            backgroundImage: `url(${CHEVRON_SVG})`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right 0.5rem center',
+            backgroundSize: '1rem',
+          }}
+          value={selectedAcademicYearId}
+          onChange={(e) => setSelectedAcademicYearId(e.target.value)}
+        >
+          <option value="">Select Academic</option>
+          {academicYearOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      )}
       {loadBtns.map((btn) => {
         const BtnIcon = btn.icon ?? Icon;
         const isAddNew = !!btn.modalKey;
@@ -112,11 +172,11 @@ export default function EntityTab({ entityKey, modalKey, icon: Icon, loadButtons
             variant="primary"
             leftIcon={<BtnIcon className="w-4 h-4" />}
             onClick={() =>
-              isAddNew ? onEdit(btn.modalKey)(null) : onShowData(btn.id)
+              isAddNew ? onEdit(btn.modalKey)(null) : onShowData(btn.id, academicYearIdForLoad)
             }
             disabled={!isAddNew && entity.isLoading}
           >
-            {isAddNew ? 'ADD NEW' : 'SHOW DATA'}
+            { btn.label }
           </Button>
         );
       })}
@@ -132,8 +192,8 @@ export default function EntityTab({ entityKey, modalKey, icon: Icon, loadButtons
     loadBtns.length > 1 ? 'Click a button to load or Add to create' : `Click Load ${label} or Add to create`;
 
   const handleSearchSubmit = useCallback(() => {
-    dispatch(loadData(loadPayload(entityKey, 1, limit, entity.searchQuery)));
-  }, [entityKey, limit, entity.searchQuery, dispatch]);
+    dispatch(loadData(loadPayload(entityKey, 1, limit, academicYearIdForLoad)));
+  }, [entityKey, limit, academicYearIdForLoad, dispatch]);
 
   return (
     <DataTableCard

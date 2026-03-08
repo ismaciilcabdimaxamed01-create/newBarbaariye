@@ -97,8 +97,9 @@ export default function Sidebar({
 
       {/* Nav: main + sub-menus */}
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-        {menuItems.map((item) =>
-          item.children ? (
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          return item.children ? (
             <div
               key={item.id}
               className="relative"
@@ -124,7 +125,7 @@ export default function Sidebar({
                     : 'border-transparent text-white/85 hover:bg-white/12 font-medium'
                 } ${sidebarCollapsed ? 'justify-center' : ''}`}
               >
-                {item.icon && <item.icon className="w-5 h-5 flex-shrink-0 opacity-95" />}
+                {Icon && <Icon className="w-5 h-5 flex-shrink-0 opacity-95" />}
                 {!sidebarCollapsed && (
                   <>
                     <span className="flex-1 text-sm">{item.label}</span>
@@ -145,7 +146,9 @@ export default function Sidebar({
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden ml-5 pl-4 mt-1 mb-2 pt-1 border-l-2 border-teal-400/50 space-y-1"
                   >
-                    {item.children.map((child) => (
+                    {item.children.map((child) => {
+                      const ChildIcon = child.icon;
+                      return (
                       <Link
                         key={child.id}
                         to={child.path}
@@ -156,10 +159,10 @@ export default function Sidebar({
                             : 'text-white/75 hover:bg-white/10 hover:text-white'
                         }`}
                       >
-                        {child.icon && <child.icon className="w-4 h-4 flex-shrink-0 opacity-90" />}
+                        {ChildIcon && <ChildIcon className="w-4 h-4 flex-shrink-0 opacity-90" />}
                         <span className="capitalize">{child.label}</span>
                       </Link>
-                    ))}
+                    ); })}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -173,11 +176,11 @@ export default function Sidebar({
                 isActive(item.path) ? 'bg-teal-500/30 text-white font-semibold border-teal-400' : 'border-transparent text-white/85 hover:bg-white/12'
               } ${sidebarCollapsed ? 'justify-center' : ''}`}
             >
-              {item.icon && <item.icon className="w-5 h-5 flex-shrink-0 opacity-95" />}
+              {Icon && <Icon className="w-5 h-5 flex-shrink-0 opacity-95" />}
               {!sidebarCollapsed && <span>{item.label}</span>}
             </Link>
-          )
-        )}
+          );
+        })}
       </nav>
     </div>
   );
@@ -213,7 +216,9 @@ export default function Sidebar({
               {hoveredSubmenu.item.label}
             </p>
             <div className="py-1.5 px-0.5 space-y-0.5">
-              {hoveredSubmenu.item.children.map((child) => (
+              {hoveredSubmenu.item.children.map((child) => {
+                const ChildIcon = child.icon;
+                return (
                 <Link
                   key={child.id}
                   to={child.path}
@@ -224,10 +229,10 @@ export default function Sidebar({
                       : 'text-white/80 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  {child.icon && <child.icon className="w-3.5 h-3.5 flex-shrink-0 opacity-90" />}
+                  {ChildIcon && <ChildIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-90" />}
                   <span className="capitalize">{child.label}</span>
                 </Link>
-              ))}
+              ); })}
             </div>
           </div>
         </motion.div>
